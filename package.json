@@ -1,0 +1,19 @@
+{
+  "name": "com.gulievstudio.rsuv-framework",
+  "displayName": "RSUV Framework",
+  "version": "0.1.0",
+  "unity": "6000.3",
+  "unityRelease": "0f1",
+  "description": "Wrappers for the new Unity 6.3 feature Renderer Shader User Value",
+  "dependencies": {
+      "com.unity.render-pipelines.universal": "17.3.0"
+  },
+  "author": {
+    "name": "Damir Guliev",
+    "url": "https://github.com/dgul3d",
+    "email": "dguliev.mail@gmail.com"
+  },
+  "changelogUrl": "https://github.com/dgul3d/com.gulievstudio.rsuv-framework/blob/master/CHANGELOG.md",
+  "documentationUrl": "https://github.com/dgul3d/com.gulievstudio.rsuv-framework/blob/master/README.md",
+  "licensesUrl": "https://github.com/dgul3d/com.gulievstudio.rsuv-framework/blob/master/LICENSE.md"
+}
