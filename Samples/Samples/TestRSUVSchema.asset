@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 827a3392fb697ec4ca75017ae887433f, type: 3}
+  m_Name: TestRSUVSchema
+  m_EditorClassIdentifier: RSUVFramework::RSUVFramework.RSUVSchema
+  _shaderSymbolPrefix: RSUVSchema
+  _generatedBindingsDirectory: Packages/com.gulievstudio.rsuv-framework/Samples/Generated
+  _autoGenerateOnChange: 0
+  _fields:
+  - _name: MyCol
+    _fieldType: 3
+    _bitCount: 8
+    _minimumIntegerValue: 0
+    _maximumIntegerValue: 0
+    _defaultIntegerValue: 0
+    _minimumFloatValue: 0
+    _maximumFloatValue: 0
+    _defaultFloatValue: 0
+    _defaultColorValue: {r: 1, g: 1, b: 1, a: 1}
+    _defaultBooleanValue: 0

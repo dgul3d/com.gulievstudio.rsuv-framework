@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "unity": "6000.3",
   "unityRelease": "0f1",
-  "description": "Wrappers for the new Unity 6.3 feature Renderer Shader User Value",
+  "description": "Schema-driven wrappers for Unity 6 Renderer Shader User Value.",
   "dependencies": {
       "com.unity.render-pipelines.universal": "17.3.0"
   },

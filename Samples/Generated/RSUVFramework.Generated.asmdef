@@ -1,0 +1,16 @@
+{
+    "name": "RSUVFramework.Generated",
+    "rootNamespace": "",
+    "references": [
+        "GUID:41042b2ab19f2324d849fc8ff007b36a"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
