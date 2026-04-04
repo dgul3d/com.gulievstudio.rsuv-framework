@@ -4,7 +4,7 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2026-04-04
 
 ### Added
 
@@ -15,5 +15,4 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Shared shader decode helpers in `ShaderLibrary/RSUVCore.hlsl`.
 - Generated per-schema HLSL wrappers for handwritten shaders and Shader Graph custom function nodes.
 - Generated per-schema C# bindings with typed `RSUVFieldKey<TValue>` access and extension-style writer setters.
-- Sample schema generation menu with health, selection, appearance, animation, and combined examples.
 - Inspector tooling for schema validation, binding generation, and editing schema-backed runtime values.

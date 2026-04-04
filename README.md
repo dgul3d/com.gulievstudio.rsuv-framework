@@ -4,6 +4,8 @@ Schema-driven wrappers for Unity 6 Renderer Shader User Value.
 
 This package helps author, validate, pack, and decode a single 32-bit RSUV payload without manually tracking bit offsets in C# and shaders.
 
+![rsuv_framework](Documentation~/images/demo_RSUV_schema.png)
+
 ## Features
 
 - `RSUVSchema` assets for authoring per-renderer packed layouts.
@@ -13,7 +15,6 @@ This package helps author, validate, pack, and decode a single 32-bit RSUV paylo
 - Inspector support for editing schema-backed values directly on components.
 - Generated HLSL wrappers for handwritten shaders and Shader Graph custom function nodes.
 - Generated C# bindings with typed field keys and extension-style setters.
-- Sample schema generation based on Unity RSUV examples.
 
 ## Installation
 
@@ -50,7 +51,7 @@ Important constraints:
 
 - Total bit count across all fields must stay within 32 bits.
 - Field names must be unique.
-- Sanitized field identifiers must also be unique because they are used for generated APIs.
+- Sanitized field identifiers must also be unique because they are used for generated C# and HLSL APIs.
 
 ### 2. Generate bindings
 
@@ -77,6 +78,19 @@ Current renderer support:
 - `SkinnedMeshRenderer`
 
 You can drive values either through strings or through generated typed bindings.
+
+# Demo
+
+![rsuv_framework_demo_image](Documentation~/images/rsuv_demo_scene.gif)
+
+Demo contains:
+
+- RSUVFrameworkDemo.unity scene
+- RSUVTestColorDriver.cs, RSUVTestAtlasDriver.cs - example of driving values through generated bindings
+- SG_TestRSUV.shadergraph - example Shader Graph using generated HLSL wrappers for decoding values from shader code and using them to drive shader logic.
+
+
+## Property drivers:
 
 String-based example:
 
@@ -146,12 +160,10 @@ RSUVSchema_GetMyCol_half(out Value);
 
 Shared decode helpers live in `ShaderLibrary/RSUVCore.hlsl`.
 
-## Main entry points
+### Confused about what fuction to call in shader graph custom function node?
 
-- Runtime schema asset: `RSUVSchema`
-- Runtime writer component: `RSUVRendererValueWriter`
-- Typed field key API: `RSUVFieldKey<TValue>`
-- Shared shader helpers: `ShaderLibrary/RSUVCore.hlsl`
-- HLSL generator: `RSUVHlslGenerator`
-- C# generator: `RSUVCSharpGenerator`
+Pick the one that does not have suffixes (like`_float`, `_half`, `Raw`, or `FromData`). This is the final user-friendly accessor that abstracts away the underlying field type and packing. It will call the correct internal function based on the schema definition.
 
+**Use `Value` output name in the custom function node to match the generated API. Don't forget about value type!**
+
+![For example](Documentation~/images/RSUV_hlsl_file_tip.png)
