@@ -18,9 +18,9 @@ namespace RSUVFramework.Editor
                 throw new InvalidOperationException(errorMessage);
             }
 
-            string outputDirectory = string.IsNullOrWhiteSpace(schema.GeneratedBindingsDirectory)
+            string outputDirectory = string.IsNullOrWhiteSpace(schema.GeneratedHlslBindingsDirectory)
                 ? DEFAULT_OUTPUT_DIRECTORY
-                : schema.GeneratedBindingsDirectory.Replace('\\', '/');
+                : schema.GeneratedHlslBindingsDirectory.Replace('\\', '/');
 
             string fileName = $"{RSUVSchemaUtility.SanitizeIdentifier(schema.name)}.generated.hlsl";
             string assetPath = $"{outputDirectory.TrimEnd('/')}/{fileName}";

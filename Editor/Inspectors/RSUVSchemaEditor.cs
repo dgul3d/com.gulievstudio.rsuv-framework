@@ -66,7 +66,8 @@ namespace RSUVFramework.Editor
         private void DrawSettings()
         {
             EditorGUILayout.PropertyField(serializedObject.FindProperty("_shaderSymbolPrefix"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("_generatedBindingsDirectory"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("_generatedCSharpBindingsDirectory"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("_generatedHlslBindingsDirectory"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("_autoGenerateOnChange"));
         }
 
