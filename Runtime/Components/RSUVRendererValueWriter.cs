@@ -25,6 +25,7 @@ namespace RSUVFramework
         }
 
         public IReadOnlyList<RSUVSerializedFieldValue> FieldValues => _fieldValues;
+        public IReadOnlyList<Renderer> Renderers => _renderers;
 
         private void Awake()
         {
@@ -87,9 +88,56 @@ namespace RSUVFramework
             ApplySerializedValues();
         }
 
+        public void SetRenderers(params Renderer[] renderers)
+        {
+            _renderers.Clear();
+
+            if (renderers != null)
+            {
+                for (int i = 0; i < renderers.Length; i++)
+                {
+                    Renderer renderer = renderers[i];
+                    if (renderer == null || _renderers.Contains(renderer))
+                    {
+                        continue;
+                    }
+
+                    _renderers.Add(renderer);
+                }
+            }
+
+            ApplyPackedValue();
+        }
+
+        public void AddRenderers(params Renderer[] renderers)
+        {
+            if (renderers == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                Renderer renderer = renderers[i];
+                if (renderer == null || _renderers.Contains(renderer))
+                {
+                    continue;
+                }
+
+                _renderers.Add(renderer);
+            }
+
+            ApplyPackedValue();
+        }
+
         public void SetBool(string fieldName, bool value)
         {
-            SetValue(fieldName, fieldValue => fieldValue.BooleanValue = value);
+            SetBool(fieldName, value, true);
+        }
+
+        public void SetBool(string fieldName, bool value, bool applyImmediately)
+        {
+            SetValue(fieldName, fieldValue => fieldValue.BooleanValue = value, applyImmediately);
         }
 
         public void SetBool(RSUVFieldKey<bool> field, bool value)
@@ -99,7 +147,12 @@ namespace RSUVFramework
 
         public void SetInt(string fieldName, int value)
         {
-            SetValue(fieldName, fieldValue => fieldValue.IntegerValue = value);
+            SetInt(fieldName, value, true);
+        }
+
+        public void SetInt(string fieldName, int value, bool applyImmediately)
+        {
+            SetValue(fieldName, fieldValue => fieldValue.IntegerValue = value, applyImmediately);
         }
 
         public void SetInt(RSUVFieldKey<int> field, int value)
@@ -119,7 +172,12 @@ namespace RSUVFramework
 
         public void SetFloat(string fieldName, float value)
         {
-            SetValue(fieldName, fieldValue => fieldValue.FloatValue = value);
+            SetFloat(fieldName, value, true);
+        }
+
+        public void SetFloat(string fieldName, float value, bool applyImmediately)
+        {
+            SetValue(fieldName, fieldValue => fieldValue.FloatValue = value, applyImmediately);
         }
 
         public void SetFloat(RSUVFieldKey<float> field, float value)
@@ -129,7 +187,12 @@ namespace RSUVFramework
 
         public void SetColor(string fieldName, Color value)
         {
-            SetValue(fieldName, fieldValue => fieldValue.ColorValue = value);
+            SetColor(fieldName, value, true);
+        }
+
+        public void SetColor(string fieldName, Color value, bool applyImmediately)
+        {
+            SetValue(fieldName, fieldValue => fieldValue.ColorValue = value, applyImmediately);
         }
 
         public void SetColor(RSUVFieldKey<Color> field, Color value)
@@ -140,6 +203,12 @@ namespace RSUVFramework
         public uint GetPackedValue()
         {
             EnsureState();
+
+            if (_runtimeState == null && _schema != null)
+            {
+                RefreshSerializedFields();
+            }
+
             return _runtimeState.PackedValue;
         }
 
@@ -177,6 +246,8 @@ namespace RSUVFramework
                 return;
             }
 
+            uint packedValue = _runtimeState.PackedValue;
+
             for (int i = 0; i < _renderers.Count; i++)
             {
                 Renderer renderer = _renderers[i];
@@ -187,13 +258,13 @@ namespace RSUVFramework
 
                 if (renderer is SkinnedMeshRenderer skinnedMeshRenderer)
                 {
-                    skinnedMeshRenderer.SetShaderUserValue(_runtimeState.PackedValue);
+                    skinnedMeshRenderer.SetShaderUserValue(packedValue);
                     continue;
                 }
 
                 if (renderer is MeshRenderer meshRenderer)
                 {
-                    meshRenderer.SetShaderUserValue(_runtimeState.PackedValue);
+                    meshRenderer.SetShaderUserValue(packedValue);
                 }
             }
         }
@@ -248,11 +319,18 @@ namespace RSUVFramework
 
         private void SetValue(string fieldName, Action<RSUVSerializedFieldValue> applyValue)
         {
+            SetValue(fieldName, applyValue, true);
+        }
+
+        private void SetValue(string fieldName, Action<RSUVSerializedFieldValue> applyValue, bool applyImmediately)
+        {
             EnsureState();
 
             RSUVSerializedFieldValue fieldValue = GetSerializedValue(fieldName);
             applyValue(fieldValue);
-            ApplySerializedValues();
+
+            if (applyImmediately)
+                ApplySerializedValues();
         }
 
         private void SynchronizeSerializedValues(RSUVResolvedSchema resolvedSchema)
