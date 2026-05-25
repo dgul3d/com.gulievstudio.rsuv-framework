@@ -4,41 +4,29 @@ namespace RSUVFramework
 {
     public static class RSUVBindings
     {
-        public static readonly RSUVFieldKey<int> AlternateRSUVSchema_AtlasIndex = new RSUVFieldKey<int>("AtlasIndex");
-        public static readonly RSUVFieldKey<bool> AlternateRSUVSchema_IsFlickering = new RSUVFieldKey<bool>("IsFlickering");
-        public static readonly RSUVFieldKey<int> RSUVSchema_RotationSpeed = new RSUVFieldKey<int>("RotationSpeed");
-        public static readonly RSUVFieldKey<Color> RSUVSchema_QuantizedColor = new RSUVFieldKey<Color>("QuantizedColor");
-        public static readonly RSUVFieldKey<bool> RSUVSchema_IsFlickering = new RSUVFieldKey<bool>("IsFlickering");
-        public static readonly RSUVFieldKey<int> RSUVSchema_AtlasIndex = new RSUVFieldKey<int>("AtlasIndex");
+        public static readonly RSUVFieldKey<int> AtlasIndex = new RSUVFieldKey<int>("AtlasIndex");
+        public static readonly RSUVFieldKey<bool> IsFlickering = new RSUVFieldKey<bool>("IsFlickering");
+        public static readonly RSUVFieldKey<Color> QuantizedColor = new RSUVFieldKey<Color>("QuantizedColor");
+        public static readonly RSUVFieldKey<int> RotationSpeed = new RSUVFieldKey<int>("RotationSpeed");
 
-        public static void SetAlternateRSUVSchema_AtlasIndex(this RSUVRendererValueWriter writer, int value)
+        public static void SetAtlasIndex(this RSUVRendererValueWriter writer, int value)
         {
-            writer.SetInt(AlternateRSUVSchema_AtlasIndex, value);
+            writer.SetInt(AtlasIndex, value);
         }
 
-        public static void SetAlternateRSUVSchema_IsFlickering(this RSUVRendererValueWriter writer, bool value)
+        public static void SetIsFlickering(this RSUVRendererValueWriter writer, bool value)
         {
-            writer.SetBool(AlternateRSUVSchema_IsFlickering, value);
+            writer.SetBool(IsFlickering, value);
         }
 
-        public static void SetRSUVSchema_RotationSpeed(this RSUVRendererValueWriter writer, int value)
+        public static void SetQuantizedColor(this RSUVRendererValueWriter writer, Color value)
         {
-            writer.SetInt(RSUVSchema_RotationSpeed, value);
+            writer.SetColor(QuantizedColor, value);
         }
 
-        public static void SetRSUVSchema_QuantizedColor(this RSUVRendererValueWriter writer, Color value)
+        public static void SetRotationSpeed(this RSUVRendererValueWriter writer, int value)
         {
-            writer.SetColor(RSUVSchema_QuantizedColor, value);
-        }
-
-        public static void SetRSUVSchema_IsFlickering(this RSUVRendererValueWriter writer, bool value)
-        {
-            writer.SetBool(RSUVSchema_IsFlickering, value);
-        }
-
-        public static void SetRSUVSchema_AtlasIndex(this RSUVRendererValueWriter writer, int value)
-        {
-            writer.SetInt(RSUVSchema_AtlasIndex, value);
+            writer.SetInt(RotationSpeed, value);
         }
 
     }

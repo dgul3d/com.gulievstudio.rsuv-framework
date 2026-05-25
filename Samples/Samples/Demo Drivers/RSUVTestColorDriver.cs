@@ -18,7 +18,7 @@ namespace RSUVFramework
             }
 
             float blend = Mathf.PingPong(Time.time * speed, 1f);
-            _writer.SetRSUVSchema_QuantizedColor(Color.Lerp(color1, color2, blend));
+            _writer.SetQuantizedColor(Color.Lerp(color1, color2, blend));
         }
     }
-    }
+}

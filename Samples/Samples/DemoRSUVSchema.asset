@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: DemoRSUVSchema
   m_EditorClassIdentifier: RSUVFramework::RSUVFramework.RSUVSchema
   _namingPrefix: RSUVSchema
-  _generatedBindingsDirectory: Packages/com.gulievstudio.rsuv-framework/Samples/Generated
   _autoGenerateOnChange: 0
   _fields:
   - _name: RotationSpeed

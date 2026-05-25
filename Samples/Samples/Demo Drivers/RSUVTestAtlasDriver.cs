@@ -14,8 +14,9 @@ namespace RSUVFramework
             {
                 return;
             }
+
             int atlasIndex = (Mathf.FloorToInt(Time.time * speed) % 3) + 1;
-            _writer.SetRSUVSchema_AtlasIndex(atlasIndex);
+            _writer.SetAtlasIndex(atlasIndex);
         }
     }
-    }
+}

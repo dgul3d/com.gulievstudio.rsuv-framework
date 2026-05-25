@@ -23,7 +23,7 @@ int AlternateRSUVSchema_GetAtlasIndexFromData(uint data)
     return RSUV_DecodeInt(data, AlternateRSUVSchema_AtlasIndex_OFFSET, AlternateRSUVSchema_AtlasIndex_BITS, AlternateRSUVSchema_AtlasIndex_MIN_INT);
 }
 
-int AlternateRSUVSchema_GetAtlasIndex()
+int AlternateRSUVSchema_GetAtlasIndex() //CUSTOM NODE READY
 {
     return AlternateRSUVSchema_GetAtlasIndexFromData(RSUV_GetData());
 }
@@ -56,7 +56,7 @@ bool AlternateRSUVSchema_GetIsFlickeringFromData(uint data)
     return RSUV_DecodeBool(data, AlternateRSUVSchema_IsFlickering_OFFSET);
 }
 
-bool AlternateRSUVSchema_GetIsFlickering()
+bool AlternateRSUVSchema_GetIsFlickering() //CUSTOM NODE READY
 {
     return AlternateRSUVSchema_GetIsFlickeringFromData(RSUV_GetData());
 }
@@ -97,7 +97,7 @@ int RSUVSchema_GetRotationSpeedFromData(uint data)
     return RSUV_DecodeInt(data, RSUVSchema_RotationSpeed_OFFSET, RSUVSchema_RotationSpeed_BITS, RSUVSchema_RotationSpeed_MIN_INT);
 }
 
-int RSUVSchema_GetRotationSpeed()
+int RSUVSchema_GetRotationSpeed() //CUSTOM NODE READY
 {
     return RSUVSchema_GetRotationSpeedFromData(RSUV_GetData());
 }
@@ -130,7 +130,7 @@ float4 RSUVSchema_GetQuantizedColorFromData(uint data)
     return RSUV_DecodeColor(data, RSUVSchema_QuantizedColor_OFFSET, RSUVSchema_QuantizedColor_BITS);
 }
 
-float4 RSUVSchema_GetQuantizedColor()
+float4 RSUVSchema_GetQuantizedColor() //CUSTOM NODE READY
 {
     return RSUVSchema_GetQuantizedColorFromData(RSUV_GetData());
 }
@@ -163,7 +163,7 @@ bool RSUVSchema_GetIsFlickeringFromData(uint data)
     return RSUV_DecodeBool(data, RSUVSchema_IsFlickering_OFFSET);
 }
 
-bool RSUVSchema_GetIsFlickering()
+bool RSUVSchema_GetIsFlickering() //CUSTOM NODE READY
 {
     return RSUVSchema_GetIsFlickeringFromData(RSUV_GetData());
 }
@@ -203,7 +203,7 @@ int RSUVSchema_GetAtlasIndexFromData(uint data)
     return RSUV_DecodeInt(data, RSUVSchema_AtlasIndex_OFFSET, RSUVSchema_AtlasIndex_BITS, RSUVSchema_AtlasIndex_MIN_INT);
 }
 
-int RSUVSchema_GetAtlasIndex()
+int RSUVSchema_GetAtlasIndex() //CUSTOM NODE READY
 {
     return RSUVSchema_GetAtlasIndexFromData(RSUV_GetData());
 }

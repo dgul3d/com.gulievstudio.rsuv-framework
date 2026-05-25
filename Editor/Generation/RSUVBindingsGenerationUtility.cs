@@ -6,23 +6,21 @@ namespace RSUVFramework.Editor
 {
     internal static class RSUVBindingsGenerationUtility
     {
-        public const string DEFAULT_OUTPUT_DIRECTORY = "Assets/RSUVFramework/Generated";
         public const string CSHARP_FILE_NAME = "RSUVBindings.cs";
         public const string HLSL_FILE_NAME = "RSUVBindings.hlsl";
         public const string CSHARP_CLASS_NAME = "RSUVBindings";
 
-        public static string NormalizeOutputDirectory(string outputDirectory)
+        public static string NormalizeOutputDirectory(string outputDirectory, string defaultOutputDirectory)
         {
             string normalizedDirectory = string.IsNullOrWhiteSpace(outputDirectory)
-                ? DEFAULT_OUTPUT_DIRECTORY
+                ? defaultOutputDirectory
                 : outputDirectory.Replace('\\', '/');
 
             return normalizedDirectory.TrimEnd('/');
         }
 
-        public static List<RSUVResolvedSchema> GetResolvedSchemasForDirectory(string outputDirectory)
+        public static List<RSUVResolvedSchema> GetResolvedSchemas()
         {
-            string normalizedDirectory = NormalizeOutputDirectory(outputDirectory);
             List<(string AssetPath, RSUVResolvedSchema Schema)> schemas = new List<(string AssetPath, RSUVResolvedSchema Schema)>();
             string[] schemaGuids = AssetDatabase.FindAssets("t:RSUVSchema");
 
@@ -31,12 +29,6 @@ namespace RSUVFramework.Editor
                 string assetPath = AssetDatabase.GUIDToAssetPath(schemaGuids[i]);
                 RSUVSchema schema = AssetDatabase.LoadAssetAtPath<RSUVSchema>(assetPath);
                 if (schema == null)
-                {
-                    continue;
-                }
-
-                string schemaOutputDirectory = NormalizeOutputDirectory(schema.GeneratedBindingsDirectory);
-                if (!string.Equals(schemaOutputDirectory, normalizedDirectory, StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }

@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Schema validation now requires each schema to use a unique sanitized naming prefix so generated APIs cannot collide in C# nor in HLSL.
 - Binding generation now emits shared `RSUVBindings.hlsl` and `RSUVBindings.cs` files per output directory instead of per-schema generated files. `RSUVBindings.cs` now lives in the `RSUVFramework` namespace instead of `RSUVFramework.Generated`.
+- HLSL and C# generated output directories now default to `Assets/Art/Shaders/Include` and `Assets/Scripts/Generated`.
+- Generated output directories are now configured through a shared `RSUVGenerationSettings` asset instead of per-schema settings on `RSUVSchema` assets.
 - Reworked demo scene to show multiple schemas usage and the example of shader that is shared across schemas.
 
 ## [1.0.0] - 2026-04-04

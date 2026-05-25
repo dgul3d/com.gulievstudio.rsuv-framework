@@ -19,8 +19,11 @@ namespace RSUVFramework.Editor
                 throw new InvalidOperationException(errorMessage);
             }
 
-            string outputDirectory = RSUVBindingsGenerationUtility.NormalizeOutputDirectory(schema.GeneratedBindingsDirectory);
-            List<RSUVResolvedSchema> resolvedSchemas = RSUVBindingsGenerationUtility.GetResolvedSchemasForDirectory(outputDirectory);
+            string outputDirectory = RSUVBindingsGenerationUtility.NormalizeOutputDirectory(
+                RSUVGenerationSettingsUtility.GetHlslBindingsDirectory(),
+                RSUVGenerationSettings.DEFAULT_HLSL_BINDINGS_DIRECTORY);
+
+            List<RSUVResolvedSchema> resolvedSchemas = RSUVBindingsGenerationUtility.GetResolvedSchemas();
 
             string fileName = RSUVBindingsGenerationUtility.HLSL_FILE_NAME;
             string assetPath = $"{outputDirectory.TrimEnd('/')}/{fileName}";
@@ -117,7 +120,7 @@ namespace RSUVFramework.Editor
                     builder.AppendLine($"    return RSUV_DecodeBool(data, {constantPrefix}_OFFSET);");
                     builder.AppendLine("}");
                     builder.AppendLine();
-                    builder.AppendLine($"bool {prefix}_Get{field.Identifier}()");
+                    builder.AppendLine($"bool {prefix}_Get{field.Identifier}() //CUSTOM NODE READY");
                     builder.AppendLine("{");
                     builder.AppendLine($"    return {prefix}_Get{field.Identifier}FromData(RSUV_GetData());");
                     builder.AppendLine("}");
@@ -145,7 +148,7 @@ namespace RSUVFramework.Editor
                     builder.AppendLine($"    return RSUV_DecodeFloat(data, {constantPrefix}_OFFSET, {constantPrefix}_BITS, {constantPrefix}_MIN_FLOAT, {constantPrefix}_MAX_FLOAT);");
                     builder.AppendLine("}");
                     builder.AppendLine();
-                    builder.AppendLine($"float {prefix}_Get{field.Identifier}()");
+                    builder.AppendLine($"float {prefix}_Get{field.Identifier}() //CUSTOM NODE READY");
                     builder.AppendLine("{");
                     builder.AppendLine($"    return {prefix}_Get{field.Identifier}FromData(RSUV_GetData());");
                     builder.AppendLine("}");
@@ -168,7 +171,7 @@ namespace RSUVFramework.Editor
                     builder.AppendLine($"    return RSUV_DecodeInt(data, {constantPrefix}_OFFSET, {constantPrefix}_BITS, {constantPrefix}_MIN_INT);");
                     builder.AppendLine("}");
                     builder.AppendLine();
-                    builder.AppendLine($"int {prefix}_Get{field.Identifier}()");
+                    builder.AppendLine($"int {prefix}_Get{field.Identifier}() //CUSTOM NODE READY");
                     builder.AppendLine("{");
                     builder.AppendLine($"    return {prefix}_Get{field.Identifier}FromData(RSUV_GetData());");
                     builder.AppendLine("}");
@@ -191,7 +194,7 @@ namespace RSUVFramework.Editor
                     builder.AppendLine($"    return RSUV_DecodeColor(data, {constantPrefix}_OFFSET, {constantPrefix}_BITS);");
                     builder.AppendLine("}");
                     builder.AppendLine();
-                    builder.AppendLine($"float4 {prefix}_Get{field.Identifier}()");
+                    builder.AppendLine($"float4 {prefix}_Get{field.Identifier}() //CUSTOM NODE READY");
                     builder.AppendLine("{");
                     builder.AppendLine($"    return {prefix}_Get{field.Identifier}FromData(RSUV_GetData());");
                     builder.AppendLine("}");

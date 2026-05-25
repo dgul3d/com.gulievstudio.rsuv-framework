@@ -78,8 +78,47 @@ namespace RSUVFramework.Editor
         private void DrawSettings()
         {
             EditorGUILayout.PropertyField(serializedObject.FindProperty("_namingPrefix"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("_generatedBindingsDirectory"));
+            DrawGenerationSettings();
             EditorGUILayout.PropertyField(serializedObject.FindProperty("_autoGenerateOnChange"));
+        }
+
+        private static void DrawGenerationSettings()
+        {
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField("Shared Generation Settings", EditorStyles.boldLabel);
+
+                if (RSUVGenerationSettingsUtility.TryGetSettings(out RSUVGenerationSettings settings))
+                {
+                    using (new EditorGUI.DisabledScope(true))
+                    {
+                        EditorGUILayout.ObjectField("Settings Asset", settings, typeof(RSUVGenerationSettings), false);
+                    }
+
+                    EditorGUILayout.LabelField("HLSL Bindings Directory", settings.HlslBindingsDirectory);
+                    EditorGUILayout.LabelField("C# Bindings Directory", settings.CSharpBindingsDirectory);
+
+                    if (GUILayout.Button("Select Generation Settings"))
+                    {
+                        Selection.activeObject = settings;
+                        EditorGUIUtility.PingObject(settings);
+                    }
+                }
+                else
+                {
+                    EditorGUILayout.HelpBox(
+                        "No RSUV generation settings asset was found. The default shared directories will be used until you create one.",
+                        MessageType.Info);
+
+                    EditorGUILayout.LabelField("HLSL Bindings Directory", RSUVGenerationSettings.DEFAULT_HLSL_BINDINGS_DIRECTORY);
+                    EditorGUILayout.LabelField("C# Bindings Directory", RSUVGenerationSettings.DEFAULT_CSHARP_BINDINGS_DIRECTORY);
+
+                    if (GUILayout.Button("Create Generation Settings Asset"))
+                    {
+                        RSUVGenerationSettingsUtility.CreateOrSelectSettingsAsset();
+                    }
+                }
+            }
         }
 
         private void DrawFields()

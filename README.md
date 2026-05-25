@@ -64,8 +64,8 @@ This generates:
 
 If `Auto Generate On Change` is enabled on the schema, both files are regenerated automatically when the schema asset changes.
 
-By default generated files are written to `Assets/RSUVFramework/Generated`, but the output directory can be changed per schema through `Generated Bindings Directory`.
-All schemas that target the same output directory are emitted into the same shared binding files.
+By default generated files are written to `Assets/Art/Shaders/Include` for HLSL and `Assets/Scripts/Generated` for C#.
+These shared output directories can be overridden through the `RSUVGenerationSettings` asset.
 Each schema must therefore use a unique `Naming Prefix`, which is also used as the generated API prefix.
 
 ### 3. Apply values at runtime

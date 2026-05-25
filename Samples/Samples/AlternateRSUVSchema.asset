@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: AlternateRSUVSchema
   m_EditorClassIdentifier: RSUVFramework::RSUVFramework.RSUVSchema
   _namingPrefix: AlternateRSUVSchema
-  _generatedBindingsDirectory: Packages/com.gulievstudio.rsuv-framework/Samples/Generated
   _autoGenerateOnChange: 0
   _fields:
   - _name: AtlasIndex
