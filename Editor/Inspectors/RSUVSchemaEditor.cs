@@ -39,13 +39,25 @@ namespace RSUVFramework.Editor
 
             using (new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button("Generate Bindings"))
+                if (GUILayout.Button("Generate HLSL Bindings"))
                 {
                     try
                     {
-                        string hlslAssetPath = RSUVHlslGenerator.GenerateToDisk(schema, false);
+                        string hlslAssetPath = RSUVHlslGenerator.GenerateToDisk(schema);
+                        Debug.Log($"Generated RSUV HLSL bindings at '{hlslAssetPath}'.", schema);
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.LogError(exception.Message, schema);
+                    }
+                }
+
+                if (GUILayout.Button("Generate C# Bindings"))
+                {
+                    try
+                    {
                         string csharpAssetPath = RSUVCSharpGenerator.GenerateToDisk(schema);
-                        Debug.Log($"Generated RSUV bindings at '{hlslAssetPath}' and '{csharpAssetPath}'.", schema);
+                        Debug.Log($"Generated RSUV C# bindings at '{csharpAssetPath}'.", schema);
                     }
                     catch (Exception exception)
                     {
@@ -65,9 +77,8 @@ namespace RSUVFramework.Editor
 
         private void DrawSettings()
         {
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("_shaderSymbolPrefix"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("_generatedCSharpBindingsDirectory"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("_generatedHlslBindingsDirectory"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("_namingPrefix"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("_generatedBindingsDirectory"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("_autoGenerateOnChange"));
         }
 

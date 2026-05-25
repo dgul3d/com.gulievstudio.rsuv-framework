@@ -4,16 +4,13 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [1.0.2] - 2026-04-13
+## [1.1.0] - 2026-06-25
 
-### Added
-- Runtime renderers setter, property update batching,
+### Changed
 
-## [1.0.1] - 2026-04-13
-
-### Added
-
-- Split generated bindings output into separate C# and HLSL directories to support stricter project structure separation when needed.
+- Schema validation now requires each schema to use a unique sanitized naming prefix so generated APIs cannot collide in C# nor in HLSL.
+- Binding generation now emits shared `RSUVBindings.hlsl` and `RSUVBindings.cs` files per output directory instead of per-schema generated files. `RSUVBindings.cs` now lives in the `RSUVFramework` namespace instead of `RSUVFramework.Generated`.
+- Reworked demo scene to show multiple schemas usage and the example of shader that is shared across schemas.
 
 ## [1.0.0] - 2026-04-04
 

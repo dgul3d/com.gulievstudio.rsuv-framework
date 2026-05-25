@@ -1,6 +1,4 @@
 using UnityEngine;
-using RSUVFramework;
-using static RSUVFramework.Generated.DemoRSUVSchemaApi;
 
 namespace RSUVFramework
 {   
@@ -17,7 +15,7 @@ namespace RSUVFramework
                 return;
             }
             int atlasIndex = (Mathf.FloorToInt(Time.time * speed) % 3) + 1;
-            _writer.SetAtlasIndex(atlasIndex);
+            _writer.SetRSUVSchema_AtlasIndex(atlasIndex);
         }
     }
     }

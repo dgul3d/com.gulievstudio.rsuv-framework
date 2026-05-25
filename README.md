@@ -55,16 +55,18 @@ Important constraints:
 
 ### 2. Generate bindings
 
-Select the `RSUVSchema` asset and press `Generate Bindings`.
+Select the `RSUVSchema` asset and press either `Generate HLSL Bindings` or `Generate C# Bindings`.
 
 This generates:
 
-- `*.generated.hlsl` wrappers for decoding the schema in shaders.
-- `*.generated.cs` bindings for typed runtime access.
+- `RSUVBindings.hlsl` wrappers for decoding schemas in shaders.
+- `RSUVBindings.cs` bindings for typed runtime access.
 
 If `Auto Generate On Change` is enabled on the schema, both files are regenerated automatically when the schema asset changes.
 
 By default generated files are written to `Assets/RSUVFramework/Generated`, but the output directory can be changed per schema through `Generated Bindings Directory`.
+All schemas that target the same output directory are emitted into the same shared binding files.
+Each schema must therefore use a unique `Naming Prefix`, which is also used as the generated API prefix.
 
 ### 3. Apply values at runtime
 
@@ -115,7 +117,7 @@ Generated binding example:
 ```csharp
 using UnityEngine;
 using RSUVFramework;
-using static RSUVFramework.Generated.TestRSUVSchemaApi;
+using static RSUVFramework.RSUVBindings;
 
 public sealed class RSUVTestDriver : MonoBehaviour
 {

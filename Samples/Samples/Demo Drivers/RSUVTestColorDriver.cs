@@ -1,6 +1,4 @@
 using UnityEngine;
-using RSUVFramework;
-using static RSUVFramework.Generated.DemoRSUVSchemaApi;
 
 namespace RSUVFramework
 {   
@@ -20,7 +18,7 @@ namespace RSUVFramework
             }
 
             float blend = Mathf.PingPong(Time.time * speed, 1f);
-            _writer.SetQuantizedColor(Color.Lerp(color1, color2, blend));
+            _writer.SetRSUVSchema_QuantizedColor(Color.Lerp(color1, color2, blend));
         }
     }
     }

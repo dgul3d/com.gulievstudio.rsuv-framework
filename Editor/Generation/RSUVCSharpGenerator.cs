@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEditor;
@@ -7,8 +8,7 @@ namespace RSUVFramework.Editor
 {
     public static class RSUVCSharpGenerator
     {
-        private const string GENERATED_NAMESPACE = "RSUVFramework.Generated";
-        private const string DEFAULT_OUTPUT_DIRECTORY = "Assets/RSUVFramework/Generated";
+        private const string GENERATED_NAMESPACE = "RSUVFramework";
 
         public static string GenerateToDisk(RSUVSchema schema, bool refreshAssetDatabase = true)
         {
@@ -17,11 +17,10 @@ namespace RSUVFramework.Editor
                 throw new InvalidOperationException(errorMessage);
             }
 
-            string outputDirectory = string.IsNullOrWhiteSpace(schema.GeneratedCSharpBindingsDirectory)
-                ? DEFAULT_OUTPUT_DIRECTORY
-                : schema.GeneratedCSharpBindingsDirectory.Replace('\\', '/');
+            string outputDirectory = RSUVBindingsGenerationUtility.NormalizeOutputDirectory(schema.GeneratedBindingsDirectory);
+            List<RSUVResolvedSchema> resolvedSchemas = RSUVBindingsGenerationUtility.GetResolvedSchemasForDirectory(outputDirectory);
 
-            string fileName = $"{RSUVSchemaUtility.SanitizeIdentifier(schema.name)}.generated.cs";
+            string fileName = RSUVBindingsGenerationUtility.CSHARP_FILE_NAME;
             string assetPath = $"{outputDirectory.TrimEnd('/')}/{fileName}";
             string absolutePath = Path.GetFullPath(assetPath);
             string directoryPath = Path.GetDirectoryName(absolutePath);
@@ -31,7 +30,7 @@ namespace RSUVFramework.Editor
                 Directory.CreateDirectory(directoryPath);
             }
 
-            string generatedText = BuildCSharp(resolvedSchema);
+            string generatedText = BuildCSharp(resolvedSchemas);
             WriteIfChanged(absolutePath, generatedText);
 
             if (refreshAssetDatabase)
@@ -42,45 +41,66 @@ namespace RSUVFramework.Editor
             return assetPath;
         }
 
-        public static string BuildCSharp(RSUVResolvedSchema resolvedSchema)
+        public static string BuildCSharp(IReadOnlyList<RSUVResolvedSchema> resolvedSchemas)
         {
-            string className = $"{RSUVSchemaUtility.SanitizeIdentifier(resolvedSchema.SchemaName)}Api";
             StringBuilder builder = new StringBuilder(4096);
 
             builder.AppendLine("using UnityEngine;");
             builder.AppendLine();
             builder.AppendLine($"namespace {GENERATED_NAMESPACE}");
             builder.AppendLine("{");
-            builder.AppendLine($"    public static class {className}");
+            builder.AppendLine($"    public static class {RSUVBindingsGenerationUtility.CSHARP_CLASS_NAME}");
             builder.AppendLine("    {");
+
+            for (int schemaIndex = 0; schemaIndex < resolvedSchemas.Count; schemaIndex++)
+            {
+                AppendSchemaKeys(builder, resolvedSchemas[schemaIndex]);
+            }
+
+            if (resolvedSchemas.Count > 0)
+            {
+                builder.AppendLine();
+            }
+
+            for (int schemaIndex = 0; schemaIndex < resolvedSchemas.Count; schemaIndex++)
+            {
+                AppendSchemaSetters(builder, resolvedSchemas[schemaIndex]);
+            }
+
+            builder.AppendLine("    }");
+            builder.AppendLine("}");
+            return builder.ToString();
+        }
+
+        private static void AppendSchemaKeys(StringBuilder builder, RSUVResolvedSchema resolvedSchema)
+        {
+            string prefix = RSUVSchemaUtility.SanitizeIdentifier(resolvedSchema.NamingPrefix);
 
             for (int i = 0; i < resolvedSchema.Fields.Count; i++)
             {
                 RSUVResolvedField field = resolvedSchema.Fields[i];
                 string valueType = GetValueTypeName(field.FieldType);
-                builder.AppendLine($"        public static readonly RSUVFieldKey<{valueType}> {field.Identifier} = new RSUVFieldKey<{valueType}>(\"{EscapeString(field.Name)}\");");
+                string memberName = $"{prefix}_{field.Identifier}";
+                builder.AppendLine($"        public static readonly RSUVFieldKey<{valueType}> {memberName} = new RSUVFieldKey<{valueType}>(\"{EscapeString(field.Name)}\");");
             }
+        }
 
-            if (resolvedSchema.Fields.Count > 0)
-            {
-                builder.AppendLine();
-            }
+        private static void AppendSchemaSetters(StringBuilder builder, RSUVResolvedSchema resolvedSchema)
+        {
+            string prefix = RSUVSchemaUtility.SanitizeIdentifier(resolvedSchema.NamingPrefix);
 
             for (int i = 0; i < resolvedSchema.Fields.Count; i++)
             {
                 RSUVResolvedField field = resolvedSchema.Fields[i];
                 string valueType = GetValueTypeName(field.FieldType);
                 string setterName = GetSetterName(field.FieldType);
-                builder.AppendLine($"        public static void Set{field.Identifier}(this RSUVRendererValueWriter writer, {valueType} value)");
+                string memberName = $"{prefix}_{field.Identifier}";
+                builder.AppendLine($"        public static void Set{memberName}(this RSUVRendererValueWriter writer, {valueType} value)");
                 builder.AppendLine("        {");
-                builder.AppendLine($"            writer.{setterName}({field.Identifier}, value);");
+                builder.AppendLine($"            writer.{setterName}({memberName}, value);");
                 builder.AppendLine("        }");
                 builder.AppendLine();
             }
-
-            builder.AppendLine("    }");
-            builder.AppendLine("}");
-            return builder.ToString();
         }
 
         private static string GetSetterName(RSUVFieldType fieldType)

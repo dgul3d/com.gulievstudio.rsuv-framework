@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
@@ -9,7 +10,7 @@ namespace RSUVFramework.Editor
     public static class RSUVHlslGenerator
     {
         private const string CORE_INCLUDE_PATH = "Packages/com.gulievstudio.rsuv-framework/ShaderLibrary/RSUVCore.hlsl";
-        private const string DEFAULT_OUTPUT_DIRECTORY = "Assets/RSUVFramework/Generated";
+        private const string INCLUDE_GUARD = "RSUV_BINDINGS_INCLUDED";
 
         public static string GenerateToDisk(RSUVSchema schema, bool refreshAssetDatabase = true)
         {
@@ -18,11 +19,10 @@ namespace RSUVFramework.Editor
                 throw new InvalidOperationException(errorMessage);
             }
 
-            string outputDirectory = string.IsNullOrWhiteSpace(schema.GeneratedHlslBindingsDirectory)
-                ? DEFAULT_OUTPUT_DIRECTORY
-                : schema.GeneratedHlslBindingsDirectory.Replace('\\', '/');
+            string outputDirectory = RSUVBindingsGenerationUtility.NormalizeOutputDirectory(schema.GeneratedBindingsDirectory);
+            List<RSUVResolvedSchema> resolvedSchemas = RSUVBindingsGenerationUtility.GetResolvedSchemasForDirectory(outputDirectory);
 
-            string fileName = $"{RSUVSchemaUtility.SanitizeIdentifier(schema.name)}.generated.hlsl";
+            string fileName = RSUVBindingsGenerationUtility.HLSL_FILE_NAME;
             string assetPath = $"{outputDirectory.TrimEnd('/')}/{fileName}";
             string absolutePath = Path.GetFullPath(assetPath);
             string directoryPath = Path.GetDirectoryName(absolutePath);
@@ -32,7 +32,7 @@ namespace RSUVFramework.Editor
                 Directory.CreateDirectory(directoryPath);
             }
 
-            string generatedText = BuildHlsl(resolvedSchema);
+            string generatedText = BuildHlsl(resolvedSchemas);
             WriteIfChanged(absolutePath, generatedText);
 
             if (refreshAssetDatabase)
@@ -43,17 +43,33 @@ namespace RSUVFramework.Editor
             return assetPath;
         }
 
-        public static string BuildHlsl(RSUVResolvedSchema resolvedSchema)
+        public static string BuildHlsl(IReadOnlyList<RSUVResolvedSchema> resolvedSchemas)
         {
-            string prefix = RSUVSchemaUtility.SanitizeIdentifier(resolvedSchema.ShaderSymbolPrefix);
-            string includeGuard = $"{prefix.ToUpperInvariant()}_GENERATED_INCLUDED";
             StringBuilder builder = new StringBuilder(4096);
 
-            builder.AppendLine($"#ifndef {includeGuard}");
-            builder.AppendLine($"#define {includeGuard}");
+            builder.AppendLine($"#ifndef {INCLUDE_GUARD}");
+            builder.AppendLine($"#define {INCLUDE_GUARD}");
             builder.AppendLine();
             builder.AppendLine($"#include \"{CORE_INCLUDE_PATH}\"");
             builder.AppendLine();
+
+            for (int schemaIndex = 0; schemaIndex < resolvedSchemas.Count; schemaIndex++)
+            {
+                AppendSchema(builder, resolvedSchemas[schemaIndex]);
+
+                if (schemaIndex < (resolvedSchemas.Count - 1))
+                {
+                    builder.AppendLine();
+                }
+            }
+
+            builder.AppendLine($"#endif // {INCLUDE_GUARD}");
+            return builder.ToString();
+        }
+
+        private static void AppendSchema(StringBuilder builder, RSUVResolvedSchema resolvedSchema)
+        {
+            string prefix = RSUVSchemaUtility.SanitizeIdentifier(resolvedSchema.NamingPrefix);
 
             for (int i = 0; i < resolvedSchema.Fields.Count; i++)
             {
@@ -88,9 +104,6 @@ namespace RSUVFramework.Editor
                 AppendSemanticFunctions(builder, prefix, field, constantPrefix);
                 builder.AppendLine();
             }
-
-            builder.AppendLine($"#endif // {includeGuard}");
-            return builder.ToString();
         }
 
         private static void AppendSemanticFunctions(StringBuilder builder, string prefix, RSUVResolvedField field, string constantPrefix)

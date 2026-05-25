@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace RSUVFramework
 {
     public static class RSUVSchemaUtility
@@ -25,7 +29,7 @@ namespace RSUVFramework
                 return false;
             }
 
-            string prefix = SanitizeIdentifier(string.IsNullOrWhiteSpace(schema.ShaderSymbolPrefix) ? schema.name : schema.ShaderSymbolPrefix);
+            string prefix = GetNamingPrefix(schema);
             List<RSUVResolvedField> resolvedFields = new List<RSUVResolvedField>(schema.Fields.Count);
             int nextBitOffset = 0;
 
@@ -44,6 +48,16 @@ namespace RSUVFramework
 
             resolvedSchema = new RSUVResolvedSchema(schema.name, prefix, resolvedFields, nextBitOffset);
             return true;
+        }
+
+        public static string GetNamingPrefix(RSUVSchema schema)
+        {
+            if (schema == null)
+            {
+                return SanitizeIdentifier(string.Empty);
+            }
+
+            return SanitizeIdentifier(string.IsNullOrWhiteSpace(schema.NamingPrefix) ? schema.name : schema.NamingPrefix);
         }
 
         public static List<string> GetValidationErrors(RSUVSchema schema)
@@ -100,6 +114,10 @@ namespace RSUVFramework
 
                 ValidateFieldCapacity(field, fieldLabel, errors);
             }
+
+#if UNITY_EDITOR
+            ValidateUniqueNamingPrefix(schema, errors);
+#endif
 
             return errors;
         }
@@ -253,6 +271,39 @@ namespace RSUVFramework
         {
             return field.MinimumFloatValue;
         }
+
+#if UNITY_EDITOR
+        private static void ValidateUniqueNamingPrefix(RSUVSchema schema, List<string> errors)
+        {
+            string namingPrefix = GetNamingPrefix(schema);
+            string schemaPath = AssetDatabase.GetAssetPath(schema);
+            string[] schemaGuids = AssetDatabase.FindAssets("t:RSUVSchema");
+
+            for (int i = 0; i < schemaGuids.Length; i++)
+            {
+                string assetPath = AssetDatabase.GUIDToAssetPath(schemaGuids[i]);
+                if (string.Equals(assetPath, schemaPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                RSUVSchema otherSchema = AssetDatabase.LoadAssetAtPath<RSUVSchema>(assetPath);
+                if (otherSchema == null)
+                {
+                    continue;
+                }
+
+                string otherNamingPrefix = GetNamingPrefix(otherSchema);
+                if (!string.Equals(namingPrefix, otherNamingPrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                errors.Add($"Naming prefix '{namingPrefix}' is already used by schema '{otherSchema.name}'.");
+                return;
+            }
+        }
+#endif
 
         private static float GetMaximumFloatValue(RSUVSchemaField field)
         {

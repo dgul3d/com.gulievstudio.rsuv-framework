@@ -7,10 +7,10 @@ namespace RSUVFramework
     {
         private readonly Dictionary<string, RSUVResolvedField> _fieldsByName;
 
-        public RSUVResolvedSchema(string schemaName, string shaderSymbolPrefix, IReadOnlyList<RSUVResolvedField> fields, int usedBitCount)
+        public RSUVResolvedSchema(string schemaName, string namingPrefix, IReadOnlyList<RSUVResolvedField> fields, int usedBitCount)
         {
             SchemaName = schemaName;
-            ShaderSymbolPrefix = shaderSymbolPrefix;
+            NamingPrefix = namingPrefix;
             Fields = fields;
             UsedBitCount = usedBitCount;
             _fieldsByName = new Dictionary<string, RSUVResolvedField>(StringComparer.OrdinalIgnoreCase);
@@ -23,7 +23,7 @@ namespace RSUVFramework
 
         public string SchemaName { get; }
 
-        public string ShaderSymbolPrefix { get; }
+    public string NamingPrefix { get; }
 
         public IReadOnlyList<RSUVResolvedField> Fields { get; }
 
