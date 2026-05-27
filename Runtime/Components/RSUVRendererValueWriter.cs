@@ -12,6 +12,9 @@ namespace RSUVFramework
         [SerializeField] private List<Renderer> _renderers = new List<Renderer>();
         [SerializeField] private List<RSUVSerializedFieldValue> _fieldValues = new List<RSUVSerializedFieldValue>();
 
+        private bool _hasPendingSerializedChanges;
+        private Dictionary<string, RSUVSerializedFieldValue> _fieldValuesByName = new Dictionary<string, RSUVSerializedFieldValue>(StringComparer.OrdinalIgnoreCase);
+        private RSUVResolvedSchema _resolvedSchema;
         private RSUVRuntimeState _runtimeState;
 
         public RSUVSchema Schema
@@ -52,12 +55,18 @@ namespace RSUVFramework
             if (_schema == null)
             {
                 _fieldValues.Clear();
+                _fieldValuesByName.Clear();
+                _hasPendingSerializedChanges = false;
+                _resolvedSchema = null;
                 _runtimeState = null;
                 return;
             }
 
             if (!TryGetResolvedSchema(out RSUVResolvedSchema resolvedSchema, out string errorMessage))
             {
+                _fieldValuesByName.Clear();
+                _hasPendingSerializedChanges = false;
+                _resolvedSchema = null;
                 _runtimeState = null;
                 Debug.LogError(errorMessage, this);
                 return;
@@ -71,6 +80,9 @@ namespace RSUVFramework
         {
             if (!TryGetResolvedSchema(out RSUVResolvedSchema resolvedSchema, out string errorMessage))
             {
+                _fieldValuesByName.Clear();
+                _hasPendingSerializedChanges = false;
+                _resolvedSchema = null;
                 _runtimeState = null;
                 Debug.LogError(errorMessage, this);
                 return;
@@ -85,6 +97,7 @@ namespace RSUVFramework
                 _fieldValues.Add(fieldValue);
             }
 
+            RebuildFieldValueLookup();
             ApplySerializedValues();
         }
 
@@ -137,7 +150,7 @@ namespace RSUVFramework
 
         public void SetBool(string fieldName, bool value, bool applyImmediately)
         {
-            SetValue(fieldName, fieldValue => fieldValue.BooleanValue = value, applyImmediately);
+            SetBooleanValue(fieldName, value, applyImmediately);
         }
 
         public void SetBool(RSUVFieldKey<bool> field, bool value)
@@ -152,7 +165,7 @@ namespace RSUVFramework
 
         public void SetInt(string fieldName, int value, bool applyImmediately)
         {
-            SetValue(fieldName, fieldValue => fieldValue.IntegerValue = value, applyImmediately);
+            SetIntegerValue(fieldName, value, applyImmediately);
         }
 
         public void SetInt(RSUVFieldKey<int> field, int value)
@@ -177,7 +190,7 @@ namespace RSUVFramework
 
         public void SetFloat(string fieldName, float value, bool applyImmediately)
         {
-            SetValue(fieldName, fieldValue => fieldValue.FloatValue = value, applyImmediately);
+            SetFloatValue(fieldName, value, applyImmediately);
         }
 
         public void SetFloat(RSUVFieldKey<float> field, float value)
@@ -192,7 +205,7 @@ namespace RSUVFramework
 
         public void SetColor(string fieldName, Color value, bool applyImmediately)
         {
-            SetValue(fieldName, fieldValue => fieldValue.ColorValue = value, applyImmediately);
+            SetColorValue(fieldName, value, applyImmediately);
         }
 
         public void SetColor(RSUVFieldKey<Color> field, Color value)
@@ -204,9 +217,9 @@ namespace RSUVFramework
         {
             EnsureState();
 
-            if (_runtimeState == null && _schema != null)
+            if (_hasPendingSerializedChanges)
             {
-                RefreshSerializedFields();
+                ApplySerializedValues();
             }
 
             return _runtimeState.PackedValue;
@@ -214,28 +227,51 @@ namespace RSUVFramework
 
         public bool TryGetResolvedSchema(out RSUVResolvedSchema resolvedSchema, out string errorMessage)
         {
-            return RSUVSchemaUtility.TryResolve(_schema, out resolvedSchema, out errorMessage);
+            if (_resolvedSchema != null)
+            {
+                resolvedSchema = _resolvedSchema;
+                errorMessage = string.Empty;
+                return true;
+            }
+
+            bool isResolved = RSUVSchemaUtility.TryResolve(_schema, out resolvedSchema, out errorMessage);
+            if (isResolved)
+            {
+                _resolvedSchema = resolvedSchema;
+            }
+
+            return isResolved;
         }
 
         public void ApplySerializedValues()
         {
             if (!TryGetResolvedSchema(out RSUVResolvedSchema resolvedSchema, out string errorMessage))
             {
+                _fieldValuesByName.Clear();
+                _hasPendingSerializedChanges = false;
+                _resolvedSchema = null;
                 _runtimeState = null;
                 Debug.LogError(errorMessage, this);
                 return;
             }
 
-            _runtimeState = new RSUVRuntimeState(resolvedSchema);
+            if (_fieldValues.Count != resolvedSchema.Fields.Count)
+            {
+                SynchronizeSerializedValues(resolvedSchema);
+            }
+
+            EnsureRuntimeState(resolvedSchema);
+            _runtimeState.ClearPackedValue();
 
             for (int i = 0; i < resolvedSchema.Fields.Count; i++)
             {
                 RSUVResolvedField field = resolvedSchema.Fields[i];
-                RSUVSerializedFieldValue fieldValue = GetSerializedValue(field.Name);
+                RSUVSerializedFieldValue fieldValue = _fieldValues[i];
                 fieldValue.ClampToField(field);
                 ApplyFieldValue(field, fieldValue);
             }
 
+            _hasPendingSerializedChanges = false;
             ApplyPackedValue();
         }
 
@@ -306,31 +342,116 @@ namespace RSUVFramework
 
         private RSUVSerializedFieldValue GetSerializedValue(string fieldName)
         {
-            for (int i = 0; i < _fieldValues.Count; i++)
+            if (_fieldValuesByName.TryGetValue(fieldName, out RSUVSerializedFieldValue fieldValue))
             {
-                if (string.Equals(_fieldValues[i].FieldName, fieldName, StringComparison.OrdinalIgnoreCase))
-                {
-                    return _fieldValues[i];
-                }
+                return fieldValue;
             }
 
             throw new InvalidOperationException($"Serialized field '{fieldName}' does not exist.");
         }
 
-        private void SetValue(string fieldName, Action<RSUVSerializedFieldValue> applyValue)
-        {
-            SetValue(fieldName, applyValue, true);
-        }
-
-        private void SetValue(string fieldName, Action<RSUVSerializedFieldValue> applyValue, bool applyImmediately)
+        private void SetBooleanValue(string fieldName, bool value, bool applyImmediately)
         {
             EnsureState();
 
+            RSUVResolvedField field = GetResolvedField(fieldName, RSUVFieldType.Bool);
             RSUVSerializedFieldValue fieldValue = GetSerializedValue(fieldName);
-            applyValue(fieldValue);
+            fieldValue.BooleanValue = value;
 
-            if (applyImmediately)
+            ApplyFieldChange(field, fieldValue, applyImmediately);
+        }
+
+        private void SetIntegerValue(string fieldName, int value, bool applyImmediately)
+        {
+            EnsureState();
+
+            RSUVResolvedField field = GetResolvedField(fieldName, RSUVFieldType.Int);
+            RSUVSerializedFieldValue fieldValue = GetSerializedValue(fieldName);
+            fieldValue.IntegerValue = value;
+
+            ApplyFieldChange(field, fieldValue, applyImmediately);
+        }
+
+        private void SetFloatValue(string fieldName, float value, bool applyImmediately)
+        {
+            EnsureState();
+
+            RSUVResolvedField field = GetResolvedField(fieldName, RSUVFieldType.Float);
+            RSUVSerializedFieldValue fieldValue = GetSerializedValue(fieldName);
+            fieldValue.FloatValue = value;
+
+            ApplyFieldChange(field, fieldValue, applyImmediately);
+        }
+
+        private void SetColorValue(string fieldName, Color value, bool applyImmediately)
+        {
+            EnsureState();
+
+            RSUVResolvedField field = GetResolvedField(fieldName, RSUVFieldType.Color);
+            RSUVSerializedFieldValue fieldValue = GetSerializedValue(fieldName);
+            fieldValue.ColorValue = value;
+
+            ApplyFieldChange(field, fieldValue, applyImmediately);
+        }
+
+        private void ApplyFieldChange(RSUVResolvedField field, RSUVSerializedFieldValue fieldValue, bool applyImmediately)
+        {
+            if (!applyImmediately)
+            {
+                _hasPendingSerializedChanges = true;
+                return;
+            }
+
+            if (_hasPendingSerializedChanges)
+            {
                 ApplySerializedValues();
+                return;
+            }
+
+            fieldValue.ClampToField(field);
+            ApplyFieldValue(field, fieldValue);
+            ApplyPackedValue();
+        }
+
+        private RSUVResolvedField GetResolvedField(string fieldName, RSUVFieldType expectedFieldType)
+        {
+            if (_resolvedSchema == null || !_resolvedSchema.TryGetField(fieldName, out RSUVResolvedField field))
+            {
+                throw new InvalidOperationException($"Field '{fieldName}' does not exist in schema.");
+            }
+
+            if (field.FieldType != expectedFieldType)
+            {
+                throw new InvalidOperationException($"Field '{fieldName}' is not of type {expectedFieldType}.");
+            }
+
+            return field;
+        }
+
+        private void EnsureRuntimeState(RSUVResolvedSchema resolvedSchema)
+        {
+            if (_runtimeState != null && ReferenceEquals(_runtimeState.ResolvedSchema, resolvedSchema))
+            {
+                return;
+            }
+
+            _runtimeState = new RSUVRuntimeState(resolvedSchema, false);
+        }
+
+        private void RebuildFieldValueLookup()
+        {
+            _fieldValuesByName.Clear();
+
+            for (int i = 0; i < _fieldValues.Count; i++)
+            {
+                RSUVSerializedFieldValue fieldValue = _fieldValues[i];
+                if (fieldValue == null || string.IsNullOrWhiteSpace(fieldValue.FieldName))
+                {
+                    continue;
+                }
+
+                _fieldValuesByName[fieldValue.FieldName] = fieldValue;
+            }
         }
 
         private void SynchronizeSerializedValues(RSUVResolvedSchema resolvedSchema)
@@ -367,6 +488,7 @@ namespace RSUVFramework
             }
 
             _fieldValues = synchronizedValues;
+            RebuildFieldValueLookup();
         }
     }
 }

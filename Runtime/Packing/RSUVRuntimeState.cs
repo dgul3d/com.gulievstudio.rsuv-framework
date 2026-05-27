@@ -25,6 +25,20 @@ namespace RSUVFramework
             ResetToDefaults();
         }
 
+        public RSUVRuntimeState(RSUVResolvedSchema resolvedSchema, bool initializeWithDefaults)
+        {
+            _resolvedSchema = resolvedSchema ?? throw new ArgumentNullException(nameof(resolvedSchema));
+
+            if (initializeWithDefaults)
+            {
+                ResetToDefaults();
+            }
+            else
+            {
+                _packedValue = 0u;
+            }
+        }
+
         public uint PackedValue => _packedValue;
 
         public RSUVResolvedSchema ResolvedSchema => _resolvedSchema;
@@ -55,6 +69,11 @@ namespace RSUVFramework
                         break;
                 }
             }
+        }
+
+        public void ClearPackedValue()
+        {
+            _packedValue = 0u;
         }
 
         public void SetBool(string fieldName, bool value)

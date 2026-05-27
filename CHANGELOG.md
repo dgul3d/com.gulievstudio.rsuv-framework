@@ -4,6 +4,13 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-05-27
+
+### Fixed
+
+- Optimized `RSUVRendererValueWriter` hot updates so immediate field setters reuse cached schema/runtime state, avoid per-call state rebuilds, and only fall back to full serialized reapply when deferred changes are pending.
+- Reduced `ApplySerializedValues` overhead by reusing runtime state, avoiding repeated serialized field list scans, and skipping redundant default-state initialization during full rebuilds.
+
 ## [1.1.0] - 2026-06-25
 
 ### Changed
