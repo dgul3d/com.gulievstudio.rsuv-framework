@@ -4,6 +4,13 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2026-06-18
+
+### Fixed
+
+- Guarded schema naming-prefix validation against `AssetDatabase` access during editor refresh and compilation to prevent import-time race conditions.
+- `RSUVRendererValueWriter` inspector now refreshes schema values immediately when the assigned schema layout changes, including edits made in a separate schema inspector tab.
+
 ## [1.1.1] - 2026-05-27
 
 ### Fixed
