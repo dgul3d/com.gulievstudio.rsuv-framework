@@ -275,6 +275,11 @@ namespace RSUVFramework
 #if UNITY_EDITOR
         private static void ValidateUniqueNamingPrefix(RSUVSchema schema, List<string> errors)
         {
+            if (EditorApplication.isUpdating || EditorApplication.isCompiling)
+            {
+                return;
+            }
+
             string namingPrefix = GetNamingPrefix(schema);
             string schemaPath = AssetDatabase.GetAssetPath(schema);
             string[] schemaGuids = AssetDatabase.FindAssets("t:RSUVSchema");
