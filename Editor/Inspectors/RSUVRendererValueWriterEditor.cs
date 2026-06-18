@@ -1,3 +1,4 @@
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,6 +10,7 @@ namespace RSUVFramework.Editor
         private SerializedProperty _schemaProperty;
         private SerializedProperty _renderersProperty;
         private SerializedProperty _fieldValuesProperty;
+        private string _layoutFingerprint = string.Empty;
 
         private void OnEnable()
         {
@@ -17,6 +19,32 @@ namespace RSUVFramework.Editor
             _fieldValuesProperty = serializedObject.FindProperty("_fieldValues");
 
             RefreshTargets();
+            _layoutFingerprint = ComputeLayoutFingerprint(((RSUVRendererValueWriter)target).Schema);
+            EditorApplication.update += OnEditorUpdate;
+        }
+
+        private void OnDisable()
+        {
+            EditorApplication.update -= OnEditorUpdate;
+        }
+
+        private void OnEditorUpdate()
+        {
+            RSUVRendererValueWriter writer = (RSUVRendererValueWriter)target;
+            if (writer == null)
+            {
+                return;
+            }
+
+            string fingerprint = ComputeLayoutFingerprint(writer.Schema);
+            if (string.Equals(fingerprint, _layoutFingerprint, System.StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _layoutFingerprint = fingerprint;
+            RefreshTargets();
+            Repaint();
         }
 
         public override void OnInspectorGUI()
@@ -29,6 +57,7 @@ namespace RSUVFramework.Editor
             {
                 serializedObject.ApplyModifiedProperties();
                 RefreshTargets();
+                _layoutFingerprint = ComputeLayoutFingerprint(((RSUVRendererValueWriter)target).Schema);
                 serializedObject.Update();
             }
 
@@ -36,23 +65,27 @@ namespace RSUVFramework.Editor
             EditorGUILayout.Space();
 
             RSUVRendererValueWriter writer = (RSUVRendererValueWriter)target;
-            if (!writer.TryGetResolvedSchema(out RSUVResolvedSchema resolvedSchema, out string errorMessage))
+            RSUVSchema schema = writer.Schema;
+            string fingerprint = ComputeLayoutFingerprint(schema);
+            if (!string.Equals(fingerprint, _layoutFingerprint, System.StringComparison.Ordinal))
             {
-                serializedObject.ApplyModifiedProperties();
-
-                if (_schemaProperty.objectReferenceValue != null)
-                {
-                    EditorGUILayout.HelpBox(errorMessage, MessageType.Error);
-                }
-
-                return;
-            }
-
-            if (_fieldValuesProperty.arraySize != resolvedSchema.Fields.Count)
-            {
+                _layoutFingerprint = fingerprint;
                 serializedObject.ApplyModifiedProperties();
                 RefreshTargets();
                 serializedObject.Update();
+            }
+
+            if (schema == null)
+            {
+                serializedObject.ApplyModifiedProperties();
+                return;
+            }
+
+            if (!RSUVSchemaUtility.TryResolve(schema, out RSUVResolvedSchema resolvedSchema, out string errorMessage))
+            {
+                serializedObject.ApplyModifiedProperties();
+                EditorGUILayout.HelpBox(errorMessage, MessageType.Error);
+                return;
             }
 
             EditorGUILayout.LabelField("Schema Values", EditorStyles.boldLabel);
@@ -167,6 +200,33 @@ namespace RSUVFramework.Editor
                 writer.RebuildFromSchemaDefaults();
                 EditorUtility.SetDirty(writer);
             }
+        }
+
+        private static string ComputeLayoutFingerprint(RSUVSchema schema)
+        {
+            if (schema == null)
+            {
+                return string.Empty;
+            }
+
+            if (!RSUVSchemaUtility.TryResolve(schema, out RSUVResolvedSchema resolvedSchema, out _))
+            {
+                return $"{schema.GetInstanceID()}:invalid";
+            }
+
+            StringBuilder builder = new StringBuilder(resolvedSchema.Fields.Count * 16);
+            for (int i = 0; i < resolvedSchema.Fields.Count; i++)
+            {
+                RSUVResolvedField field = resolvedSchema.Fields[i];
+                builder.Append(field.Name);
+                builder.Append('|');
+                builder.Append((int)field.FieldType);
+                builder.Append('|');
+                builder.Append(field.BitCount);
+                builder.Append(';');
+            }
+
+            return builder.ToString();
         }
     }
 }

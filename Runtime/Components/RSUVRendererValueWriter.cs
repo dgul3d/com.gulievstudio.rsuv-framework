@@ -52,6 +52,8 @@ namespace RSUVFramework
 
         public void RefreshSerializedFields()
         {
+            _resolvedSchema = null;
+
             if (_schema == null)
             {
                 _fieldValues.Clear();
