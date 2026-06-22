@@ -9,9 +9,17 @@ using UnityEditor;
 
 namespace RSUVFramework
 {
+    [Flags]
+    public enum RSUVSchemaValidationScope
+    {
+        Structural = 1,
+        ProjectWide = 2,
+        All = Structural | ProjectWide
+    }
+
     public static class RSUVSchemaUtility
     {
-        public static bool TryResolve(RSUVSchema schema, out RSUVResolvedSchema resolvedSchema, out string errorMessage)
+        public static bool TryResolve(RSUVSchema schema, out RSUVResolvedSchema resolvedSchema, out string errorMessage, RSUVSchemaValidationScope validationScope = RSUVSchemaValidationScope.All)
         {
             resolvedSchema = null;
             errorMessage = string.Empty;
@@ -22,7 +30,7 @@ namespace RSUVFramework
                 return false;
             }
 
-            List<string> errors = GetValidationErrors(schema);
+            List<string> errors = GetValidationErrors(schema, validationScope);
             if (errors.Count > 0)
             {
                 errorMessage = string.Join("\n", errors);
@@ -60,7 +68,7 @@ namespace RSUVFramework
             return SanitizeIdentifier(string.IsNullOrWhiteSpace(schema.NamingPrefix) ? schema.name : schema.NamingPrefix);
         }
 
-        public static List<string> GetValidationErrors(RSUVSchema schema)
+        public static List<string> GetValidationErrors(RSUVSchema schema, RSUVSchemaValidationScope validationScope = RSUVSchemaValidationScope.All)
         {
             List<string> errors = new List<string>();
             if (schema == null)
@@ -116,7 +124,10 @@ namespace RSUVFramework
             }
 
 #if UNITY_EDITOR
-            ValidateUniqueNamingPrefix(schema, errors);
+            if ((validationScope & RSUVSchemaValidationScope.ProjectWide) != 0)
+            {
+                ValidateUniqueNamingPrefix(schema, errors);
+            }
 #endif
 
             return errors;

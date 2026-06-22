@@ -236,7 +236,7 @@ namespace RSUVFramework
                 return true;
             }
 
-            bool isResolved = RSUVSchemaUtility.TryResolve(_schema, out resolvedSchema, out errorMessage);
+            bool isResolved = RSUVSchemaUtility.TryResolve(_schema, out resolvedSchema, out errorMessage, RSUVSchemaValidationScope.Structural);
             if (isResolved)
             {
                 _resolvedSchema = resolvedSchema;

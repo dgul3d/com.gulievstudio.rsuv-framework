@@ -4,6 +4,12 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2026-06-18
+
+### Fixed
+
+- Split schema validation into structural and project-wide scopes to avoid `AssetDatabase` scans during inspector repaints, fixing editor lag and freezes while editing `RSUVSchema` assets.
+
 ## [1.1.2] - 2026-06-18
 
 ### Fixed

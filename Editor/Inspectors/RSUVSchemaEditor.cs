@@ -15,26 +15,48 @@ namespace RSUVFramework.Editor
             new GUIContent("Color"),
         };
 
+        private RSUVResolvedSchema _cachedResolvedSchema;
+        private string _cachedErrorMessage = string.Empty;
+        private bool _cachedIsValid;
+        private bool _hasValidationCache;
+
+        private void OnEnable()
+        {
+            _hasValidationCache = false;
+        }
+
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
 
+            EditorGUI.BeginChangeCheck();
             DrawSettings();
             EditorGUILayout.Space();
             DrawFields();
+            bool inspectorChanged = EditorGUI.EndChangeCheck();
 
             serializedObject.ApplyModifiedProperties();
 
             RSUVSchema schema = (RSUVSchema)target;
             EditorGUILayout.Space();
 
-            if (RSUVSchemaUtility.TryResolve(schema, out RSUVResolvedSchema resolvedSchema, out string errorMessage))
+            if (inspectorChanged || !_hasValidationCache)
             {
-                EditorGUILayout.HelpBox($"Resolved layout: {resolvedSchema.UsedBitCount}/32 bits used, {resolvedSchema.FreeBitCount} free.", MessageType.Info);
+                _hasValidationCache = true;
+                _cachedIsValid = RSUVSchemaUtility.TryResolve(
+                    schema,
+                    out _cachedResolvedSchema,
+                    out _cachedErrorMessage,
+                    RSUVSchemaValidationScope.Structural);
+            }
+
+            if (_cachedIsValid)
+            {
+                EditorGUILayout.HelpBox($"Resolved layout: {_cachedResolvedSchema.UsedBitCount}/32 bits used, {_cachedResolvedSchema.FreeBitCount} free.", MessageType.Info);
             }
             else
             {
-                EditorGUILayout.HelpBox(errorMessage, MessageType.Error);
+                EditorGUILayout.HelpBox(_cachedErrorMessage, MessageType.Error);
             }
 
             using (new EditorGUILayout.HorizontalScope())
@@ -67,7 +89,7 @@ namespace RSUVFramework.Editor
 
                 if (GUILayout.Button("Validate"))
                 {
-                    if (RSUVSchemaUtility.TryResolve(schema, out _, out _))
+                    if (RSUVSchemaUtility.TryResolve(schema, out _, out _, RSUVSchemaValidationScope.All))
                     {
                         Debug.Log($"Schema '{schema.name}' is valid.", schema);
                     }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
@@ -81,7 +82,7 @@ namespace RSUVFramework.Editor
                 return;
             }
 
-            if (!RSUVSchemaUtility.TryResolve(schema, out RSUVResolvedSchema resolvedSchema, out string errorMessage))
+            if (!RSUVSchemaUtility.TryResolve(schema, out RSUVResolvedSchema resolvedSchema, out string errorMessage, RSUVSchemaValidationScope.Structural))
             {
                 serializedObject.ApplyModifiedProperties();
                 EditorGUILayout.HelpBox(errorMessage, MessageType.Error);
@@ -209,15 +210,16 @@ namespace RSUVFramework.Editor
                 return string.Empty;
             }
 
-            if (!RSUVSchemaUtility.TryResolve(schema, out RSUVResolvedSchema resolvedSchema, out _))
+            IReadOnlyList<RSUVSchemaField> fields = schema.Fields;
+            if (fields == null || fields.Count == 0)
             {
-                return $"{schema.GetInstanceID()}:invalid";
+                return $"{schema.GetInstanceID()}:empty";
             }
 
-            StringBuilder builder = new StringBuilder(resolvedSchema.Fields.Count * 16);
-            for (int i = 0; i < resolvedSchema.Fields.Count; i++)
+            StringBuilder builder = new StringBuilder(fields.Count * 16);
+            for (int i = 0; i < fields.Count; i++)
             {
-                RSUVResolvedField field = resolvedSchema.Fields[i];
+                RSUVSchemaField field = fields[i];
                 builder.Append(field.Name);
                 builder.Append('|');
                 builder.Append((int)field.FieldType);
