@@ -1,7 +1,7 @@
 {
   "name": "com.gulievstudio.rsuv-framework",
   "displayName": "RSUV Framework",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "unity": "6000.3",
   "unityRelease": "0f1",
   "description": "Schema-driven wrappers for Unity 6 Renderer Shader User Value.",

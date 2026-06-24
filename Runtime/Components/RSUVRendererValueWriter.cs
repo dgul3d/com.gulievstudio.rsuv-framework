@@ -36,6 +36,12 @@ namespace RSUVFramework
 
         private void Awake()
         {
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                return;
+            }
+#endif
             RefreshSerializedFields();
         }
 
@@ -46,22 +52,30 @@ namespace RSUVFramework
 
         private void OnEnable()
         {
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                RefreshEditorRuntimeState();
+                return;
+            }
+#endif
             RefreshSerializedFields();
         }
 
 
-        public void RefreshSerializedFields()
+        public bool RefreshSerializedFields()
         {
             _resolvedSchema = null;
 
             if (_schema == null)
             {
+                bool hadValues = _fieldValues.Count > 0;
                 _fieldValues.Clear();
                 _fieldValuesByName.Clear();
                 _hasPendingSerializedChanges = false;
                 _resolvedSchema = null;
                 _runtimeState = null;
-                return;
+                return hadValues;
             }
 
             if (!TryGetResolvedSchema(out RSUVResolvedSchema resolvedSchema, out string errorMessage))
@@ -71,11 +85,22 @@ namespace RSUVFramework
                 _resolvedSchema = null;
                 _runtimeState = null;
                 Debug.LogError(errorMessage, this);
-                return;
+                return false;
             }
 
-            SynchronizeSerializedValues(resolvedSchema);
-            ApplySerializedValues();
+            bool serializedDataChanged = false;
+            if (!IsSerializedValuesInSync(resolvedSchema))
+            {
+                SynchronizeSerializedValues(resolvedSchema);
+                serializedDataChanged = true;
+            }
+            else if (_fieldValuesByName.Count == 0)
+            {
+                RebuildFieldValueLookup();
+            }
+
+            ApplyRuntimeFromSerializedFields(persistClampedValues: serializedDataChanged);
+            return serializedDataChanged;
         }
 
         public void RebuildFromSchemaDefaults()
@@ -257,9 +282,55 @@ namespace RSUVFramework
                 return;
             }
 
-            if (_fieldValues.Count != resolvedSchema.Fields.Count)
+            if (!IsSerializedValuesInSync(resolvedSchema))
             {
                 SynchronizeSerializedValues(resolvedSchema);
+            }
+
+            ApplyRuntimeFromSerializedFields(persistClampedValues: true);
+        }
+
+        private void RefreshEditorRuntimeState()
+        {
+            _resolvedSchema = null;
+
+            if (_schema == null)
+            {
+                _fieldValuesByName.Clear();
+                _runtimeState = null;
+                return;
+            }
+
+            if (!TryGetResolvedSchema(out RSUVResolvedSchema resolvedSchema, out _))
+            {
+                _runtimeState = null;
+                return;
+            }
+
+            if (!IsSerializedValuesInSync(resolvedSchema))
+            {
+                _runtimeState = null;
+                return;
+            }
+
+            if (_fieldValuesByName.Count == 0)
+            {
+                RebuildFieldValueLookup();
+            }
+
+            ApplyRuntimeFromSerializedFields(persistClampedValues: false);
+        }
+
+        private void ApplyRuntimeFromSerializedFields(bool persistClampedValues)
+        {
+            if (!TryGetResolvedSchema(out RSUVResolvedSchema resolvedSchema, out string errorMessage))
+            {
+                _fieldValuesByName.Clear();
+                _hasPendingSerializedChanges = false;
+                _resolvedSchema = null;
+                _runtimeState = null;
+                Debug.LogError(errorMessage, this);
+                return;
             }
 
             EnsureRuntimeState(resolvedSchema);
@@ -269,7 +340,11 @@ namespace RSUVFramework
             {
                 RSUVResolvedField field = resolvedSchema.Fields[i];
                 RSUVSerializedFieldValue fieldValue = _fieldValues[i];
-                fieldValue.ClampToField(field);
+                if (persistClampedValues)
+                {
+                    fieldValue.ClampToField(field);
+                }
+
                 ApplyFieldValue(field, fieldValue);
             }
 
@@ -333,7 +408,16 @@ namespace RSUVFramework
         {
             if (_runtimeState == null)
             {
-                RefreshSerializedFields();
+#if UNITY_EDITOR
+                if (!Application.isPlaying)
+                {
+                    RefreshEditorRuntimeState();
+                }
+                else
+#endif
+                {
+                    RefreshSerializedFields();
+                }
             }
 
             if (_runtimeState == null)
@@ -456,6 +540,36 @@ namespace RSUVFramework
             }
         }
 
+        private bool IsSerializedValuesInSync(RSUVResolvedSchema resolvedSchema)
+        {
+            if (_fieldValues == null || _fieldValues.Count != resolvedSchema.Fields.Count)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < resolvedSchema.Fields.Count; i++)
+            {
+                RSUVSerializedFieldValue fieldValue = _fieldValues[i];
+                RSUVResolvedField resolvedField = resolvedSchema.Fields[i];
+                if (fieldValue == null)
+                {
+                    return false;
+                }
+
+                if (!string.Equals(fieldValue.FieldName, resolvedField.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+
+                if (fieldValue.FieldType != resolvedField.FieldType)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         private void SynchronizeSerializedValues(RSUVResolvedSchema resolvedSchema)
         {
             Dictionary<string, RSUVSerializedFieldValue> existingValues = new Dictionary<string, RSUVSerializedFieldValue>(StringComparer.OrdinalIgnoreCase);
@@ -483,7 +597,8 @@ namespace RSUVFramework
                 }
                 else
                 {
-                    fieldValue.ClampToField(resolvedField);
+                    fieldValue.FieldName = resolvedField.Name;
+                    fieldValue.FieldType = resolvedField.FieldType;
                 }
 
                 synchronizedValues.Add(fieldValue);

@@ -4,6 +4,12 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.1.4] - 2026-06-24
+
+### Fixed
+
+- Stopped `RSUVRendererValueWriter` from marking prefabs dirty when opened by removing unconditional inspector refresh on enable, syncing serialized fields only when the schema layout actually changed, and avoiding serialized writes during editor runtime initialization.
+
 ## [1.1.3] - 2026-06-18
 
 ### Fixed

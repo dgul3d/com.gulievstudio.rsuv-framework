@@ -19,7 +19,6 @@ namespace RSUVFramework.Editor
             _renderersProperty = serializedObject.FindProperty("_renderers");
             _fieldValuesProperty = serializedObject.FindProperty("_fieldValues");
 
-            RefreshTargets();
             _layoutFingerprint = ComputeLayoutFingerprint(((RSUVRendererValueWriter)target).Schema);
             EditorApplication.update += OnEditorUpdate;
         }
@@ -87,6 +86,13 @@ namespace RSUVFramework.Editor
                 serializedObject.ApplyModifiedProperties();
                 EditorGUILayout.HelpBox(errorMessage, MessageType.Error);
                 return;
+            }
+
+            if (_fieldValuesProperty.arraySize != resolvedSchema.Fields.Count)
+            {
+                serializedObject.ApplyModifiedProperties();
+                RefreshTargets();
+                serializedObject.Update();
             }
 
             EditorGUILayout.LabelField("Schema Values", EditorStyles.boldLabel);
@@ -186,9 +192,10 @@ namespace RSUVFramework.Editor
             for (int i = 0; i < targets.Length; i++)
             {
                 RSUVRendererValueWriter writer = (RSUVRendererValueWriter)targets[i];
-                Undo.RecordObject(writer, "Refresh RSUV Fields");
-                writer.RefreshSerializedFields();
-                EditorUtility.SetDirty(writer);
+                if (writer.RefreshSerializedFields())
+                {
+                    EditorUtility.SetDirty(writer);
+                }
             }
         }
 
