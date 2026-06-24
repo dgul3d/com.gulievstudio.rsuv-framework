@@ -12,20 +12,55 @@ namespace RSUVFramework.Editor
         private SerializedProperty _renderersProperty;
         private SerializedProperty _fieldValuesProperty;
         private string _layoutFingerprint = string.Empty;
+        private bool _isSubscribedToEditorUpdate;
 
         private void OnEnable()
         {
-            _schemaProperty = serializedObject.FindProperty("_schema");
-            _renderersProperty = serializedObject.FindProperty("_renderers");
-            _fieldValuesProperty = serializedObject.FindProperty("_fieldValues");
+            if (!HasValidTargets())
+            {
+                return;
+            }
 
-            _layoutFingerprint = ComputeLayoutFingerprint(((RSUVRendererValueWriter)target).Schema);
+            CacheSerializedProperties();
+
+            RSUVRendererValueWriter writer = (RSUVRendererValueWriter)target;
+            _layoutFingerprint = ComputeLayoutFingerprint(writer.Schema);
             EditorApplication.update += OnEditorUpdate;
+            _isSubscribedToEditorUpdate = true;
         }
 
         private void OnDisable()
         {
-            EditorApplication.update -= OnEditorUpdate;
+            if (_isSubscribedToEditorUpdate)
+            {
+                EditorApplication.update -= OnEditorUpdate;
+                _isSubscribedToEditorUpdate = false;
+            }
+        }
+
+        private void CacheSerializedProperties()
+        {
+            _schemaProperty = serializedObject.FindProperty("_schema");
+            _renderersProperty = serializedObject.FindProperty("_renderers");
+            _fieldValuesProperty = serializedObject.FindProperty("_fieldValues");
+        }
+
+        private bool HasValidTargets()
+        {
+            if (targets == null || targets.Length == 0)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < targets.Length; i++)
+            {
+                if (targets[i] == null)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private void OnEditorUpdate()
@@ -49,6 +84,16 @@ namespace RSUVFramework.Editor
 
         public override void OnInspectorGUI()
         {
+            if (!HasValidTargets())
+            {
+                return;
+            }
+
+            if (_schemaProperty == null)
+            {
+                CacheSerializedProperties();
+            }
+
             serializedObject.Update();
 
             EditorGUI.BeginChangeCheck();
@@ -65,6 +110,12 @@ namespace RSUVFramework.Editor
             EditorGUILayout.Space();
 
             RSUVRendererValueWriter writer = (RSUVRendererValueWriter)target;
+            if (writer == null)
+            {
+                serializedObject.ApplyModifiedProperties();
+                return;
+            }
+
             RSUVSchema schema = writer.Schema;
             string fingerprint = ComputeLayoutFingerprint(schema);
             if (!string.Equals(fingerprint, _layoutFingerprint, System.StringComparison.Ordinal))
@@ -181,6 +232,11 @@ namespace RSUVFramework.Editor
             for (int i = 0; i < targets.Length; i++)
             {
                 RSUVRendererValueWriter writer = (RSUVRendererValueWriter)targets[i];
+                if (writer == null)
+                {
+                    continue;
+                }
+
                 Undo.RecordObject(writer, "Apply RSUV Values");
                 writer.ApplySerializedValues();
                 EditorUtility.SetDirty(writer);
@@ -192,6 +248,11 @@ namespace RSUVFramework.Editor
             for (int i = 0; i < targets.Length; i++)
             {
                 RSUVRendererValueWriter writer = (RSUVRendererValueWriter)targets[i];
+                if (writer == null)
+                {
+                    continue;
+                }
+
                 if (writer.RefreshSerializedFields())
                 {
                     EditorUtility.SetDirty(writer);
@@ -204,6 +265,11 @@ namespace RSUVFramework.Editor
             for (int i = 0; i < targets.Length; i++)
             {
                 RSUVRendererValueWriter writer = (RSUVRendererValueWriter)targets[i];
+                if (writer == null)
+                {
+                    continue;
+                }
+
                 Undo.RecordObject(writer, "Reset RSUV Fields");
                 writer.RebuildFromSchemaDefaults();
                 EditorUtility.SetDirty(writer);
